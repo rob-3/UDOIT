@@ -11,6 +11,7 @@ use App\Entity\User;
 use App\Lms\LmsInterface;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Request;
@@ -43,18 +44,23 @@ class UtilityService {
     
     private $env;
 
+    public LoggerInterface $logger;
+
     public function __construct(
         SessionService $sessionService,
         ManagerRegistry $doctrine,
         Environment $twig,
         Security $security,
-        ParameterBagInterface $paramBag)
+        ParameterBagInterface $paramBag,
+        LoggerInterface $logger
+    )
     {
         $this->sessionService = $sessionService;
         $this->twig = $twig;
         $this->doctrine = $doctrine;
         $this->security = $security;
         $this->paramBag = $paramBag;
+        $this->logger = $logger;
 
         self::$timezone = new \DateTimeZone('GMT');
     }

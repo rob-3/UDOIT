@@ -55,6 +55,7 @@ class LtiController extends AbstractController
         UtilityService $util,
         LmsApiService $lmsApi
     ) {
+        $util->logger->error("Testing testing 123");
         $this->request = $request;
         $this->util = $util;
         $this->lmsApi = $lmsApi;
