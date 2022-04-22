@@ -82,6 +82,7 @@ class SessionAuthenticator extends AbstractAuthenticator
         }
 
         $username = $user->getUsername();
+        dd($username);
 
         return new SelfValidatingPassport(new UserBadge($username));
     }
