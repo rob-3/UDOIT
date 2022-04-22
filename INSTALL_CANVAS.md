@@ -6,7 +6,7 @@ Once UDOIT has been installed on a public web server the following steps must be
 * Install the application
 
 **Skills Required**
-* Ability to insert MySQL
+* Ability to insert MySQL (or edit a config file if using Docker)
 
 ## Create an API Developer Key
 UDOIT requires an API developer key, since all course data is gathered through the Canvas API.
@@ -39,50 +39,52 @@ Provide values for the following fields:
 ### Scopes
 We strongly recommend you enforce scopes with your API key. The following scopes must be enabled for UDOIT to work.
 
-* Accounts
+* accounts
     * url:GET|/api/v1/accounts
     * url:GET|/api/v1/accounts/:id
     * url:GET|/api/v1/accounts/:account_id/sub_accounts
-* Announcements
+* announcements_api
     * url:GET|/api/v1/announcements
-* Assignments
+* assignments_api
     * url:GET|/api/v1/courses/:course_id/assignments
     * url:GET|/api/v1/courses/:course_id/assignments/:id
     * url:PUT|/api/v1/courses/:course_id/assignments/:id
-* Courses
+* courses
     * url:GET|/api/v1/courses/:id
     * url:PUT|/api/v1/courses/:id
     * url:POST|/api/v1/courses/:course_id/files
-* Discussion Topics
+* discussion_topics
     * url:GET|/api/v1/courses/:course_id/discussion_topics
-    * url:GET|/api/v1/courses/:course_id/discussion_topics/:topic_id
     * url:PUT|/api/v1/courses/:course_id/discussion_topics/:topic_id
-* Enrollment Terms
+* discussion_topics_api
+    * url:GET|/api/v1/courses/:course_id/discussion_topics/:topic_id
+* terms_api
     * url:GET|/api/v1/accounts/:account_id/terms
-* Files
+* files
     * url:GET|/api/v1/courses/:course_id/files
     * url:GET|/api/v1/courses/:course_id/files/:id
-* Modules
+* context_modules_api
     * url:GET|/api/v1/courses/:course_id/modules
     * url:GET|/api/v1/courses/:course_id/modules/:id
     * url:PUT|/api/v1/courses/:course_id/modules/:id
+* context_modules_items_api
     * url:GET|/api/v1/courses/:course_id/modules/:module_id/items
     * url:GET|/api/v1/courses/:course_id/modules/:module_id/items/:id
     * url:PUT|/api/v1/courses/:course_id/modules/:module_id/items/:id
-* Pages
+* wiki_pages_api
     * url:GET|/api/v1/courses/:course_id/pages
     * url:GET|/api/v1/courses/:course_id/pages/:url
     * url:GET|/api/v1/groups/:group_id/pages/:url
     * url:PUT|/api/v1/courses/:course_id/pages/:url
-* Quiz Questions
+* quizzes/quiz_questions
     * url:GET|/api/v1/courses/:course_id/quizzes/:quiz_id/questions
     * url:GET|/api/v1/courses/:course_id/quizzes/:quiz_id/questions/:id
     * url:PUT|/api/v1/courses/:course_id/quizzes/:quiz_id/questions/:id
-* Quizzes
+* quizzes/quizzes_api
     * url:GET|/api/v1/courses/:course_id/quizzes
     * url:GET|/api/v1/courses/:course_id/quizzes/:id
     * url:PUT|/api/v1/courses/:course_id/quizzes/:id
- * Users
+ * users
     * url:GET|/api/v1/users/:id
 
 ---
@@ -105,34 +107,18 @@ Provide values for the following fields:
     * Enter URL
 * JSON URL
     * <YOUR_UDOIT_BASE_URL>/lti/config
-* Click Save.  Reload the page, then edit the LTI key you just created.
-* If your instance of Canvas is self-hosted, modify the URL under **JWK Method** to point to your canvas instance.
-* Set Additional Settings
-    * Domain
-      * Your UDOIT domain
-    * Tool ID
-      * Enter a name
-    * Custom Fields
-```
-lms_id=canvas
-lms_user_id=$Canvas.user.id
-lms_course_id=$Canvas.course.id
-lms_api_domain=$Canvas.api.domain
-```
 * Save
 * Click `ON` to enable the newly created key
-
----
-## Docker-Compose Base URL
-If you are setting up UDOIT for local development through docker-compose, <YOUR_UDOIT_BASE_URL> in both the API developer key and the LTI developer key above should be set to `https://localhost:8000`.
 
 ---
 ## Update the Institutions Table
 UDOIT is built to support more than one LMS instance. For this purpose we have an `institution` table that must be populated with the LMS information.
 
-**Note:** This step requires knowledge of MySQL.
+> **Note:** This step requires manual database configuration unless you're using the Docker installation.
 
-The following fields need to be populated in the `institution` table.
+### Manual
+
+The following fields need to be populated in the `institution` table. This involves an `INSERT INTO` query for MySQL.
 * title
     * Your institution's name
 * lms_domain
@@ -167,9 +153,21 @@ The following fields need to be populated in the `institution` table.
     * Click `Show Key` for the API key you created earlier.
     * This key will be encrypted and stored as encrypted on the first use of the key.
 
----
-## .ENV Setup
-For cloud-hosted canvas instances the default value for the `JWK_BASE_URL` environmental variable will work out of the box. If you are not cloud-hosted, you may need to change the value of this variable in `.env.local` to match your canvas instance.
+### Docker
+You can use our bundled script to quickly set up the database without having to know MySQL.
+
+First, create `.env.local` from the template.
+
+```bash
+cp .env.local.example .env.local
+```
+
+Finally, initialize the database and start UDOIT with:
+```bash
+./udoit.sh --init
+```
+
+In the future, you can use `./udoit.sh` without arguments to start UDOIT with Docker.
 
 ---
 ## Install the App
