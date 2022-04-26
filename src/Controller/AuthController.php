@@ -127,7 +127,6 @@ class AuthController extends AbstractController
     {
         $institution = $user->getInstitution();
         $code = $this->request->query->get('code');
-        dd($code);
         $clientSecret = $institution->getApiClientSecret();
 
         if (empty($clientSecret)) {
@@ -152,6 +151,7 @@ class AuthController extends AbstractController
         $requestUrl = $this->lmsApi->getLms()->getOauthTokenUri($institution);
         $response = $client->request('POST', $requestUrl, $options);
         $contentStr = $response->getContent(false);
+        dd($contentStr);
 
         return \json_decode($contentStr, true);
     }
