@@ -19,6 +19,17 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
+    public function loadUserByIdentifier(string $identifier): ?User
+    {
+        return $this->getEntityManager()->createQuery(
+            'SELECT u
+            FROM App\Entity\User u
+            WHERE u.username = :query'
+        )
+        ->setParameter('query', $identifier)
+        ->getOneOrNullResult();
+    }
+
     // public function findByApiKey($apiKey) : User {
     //     return $this->createQueryBuilder('u')
     //         ->where('u.api_key = apiKey')
