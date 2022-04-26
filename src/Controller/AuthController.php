@@ -118,7 +118,7 @@ class AuthController extends AbstractController
      */
     protected function requestApiKeyFromLms(SessionService $sessionService)
     {
-        dd($sessionService->getSession());
+        //dd($this->getUser());
         /** @var \App\Entity\User */
         $user = $this->getUser();
         $institution = $user->getInstitution();
