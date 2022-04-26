@@ -87,6 +87,8 @@ class AuthController extends AbstractController
         $user = $this->getUser();
         $newKey = $this->requestApiKeyFromLms($sessionService);
 
+        dd($newKey);
+
         // It should have access_token and refresh_token
         if (!isset($newKey['access_token']) || !isset($newKey['refresh_token'])) {
             $util->exitWithMessage('Authentication problem: Missing access token. Please contact support.');
