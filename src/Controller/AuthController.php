@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Services\LmsApiService;
 use App\Services\LmsUserService;
 use App\Services\SessionService;
@@ -85,7 +86,7 @@ class AuthController extends AbstractController
         }
 
         $user = $this->getUser();
-        $newKey = $this->requestApiKeyFromLms($sessionService);
+        $newKey = $this->requestApiKeyFromLms($sessionService, $user);
 
         dd($newKey);
 
@@ -122,10 +123,8 @@ class AuthController extends AbstractController
      *
      * @return void
      */
-    protected function requestApiKeyFromLms(SessionService $sessionService)
+    protected function requestApiKeyFromLms(SessionService $sessionService, User $user)
     {
-        /** @var \App\Entity\User */
-        $user = $this->getUser();
         $institution = $user->getInstitution();
         $code = $this->request->query->get('code');
         $clientSecret = $institution->getApiClientSecret();
