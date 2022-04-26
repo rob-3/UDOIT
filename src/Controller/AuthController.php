@@ -81,7 +81,7 @@ class AuthController extends AbstractController
         }
 
         $user = $this->getUser();
-        $newKey = $this->requestApiKeyFromLms();
+        $newKey = $this->requestApiKeyFromLms($sessionService);
 
         // It should have access_token and refresh_token
         if (!isset($newKey['access_token']) || !isset($newKey['refresh_token'])) {
@@ -116,8 +116,9 @@ class AuthController extends AbstractController
      *
      * @return void
      */
-    protected function requestApiKeyFromLms()
+    protected function requestApiKeyFromLms(SessionService $sessionService)
     {
+        dd($sessionService->getSession());
         /** @var \App\Entity\User */
         $user = $this->getUser();
         $institution = $user->getInstitution();
