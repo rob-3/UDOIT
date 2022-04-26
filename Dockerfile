@@ -1,55 +1,35 @@
-FROM php:8.1-fpm
-ARG ENVIRONMENT_TYPE
+FROM node:17 as node-builder
 
-#Install dependencies and php extensions
-RUN apt-get update && apt-get install -y \
-        git \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
-        libpng-dev \
-        libpq-dev \
-        unzip \
-        wget \
-        supervisor \
-        apache2 \
-    && docker-php-ext-configure gd  \
-    && docker-php-ext-install -j$(nproc) gd \
-    && docker-php-ext-install pdo_mysql \
-    && docker-php-ext-install pdo_pgsql
+WORKDIR /app
+COPY package.json /app
+COPY yarn.lock /app
 
-#Install AWS CLI v2
-RUN if [ "$ENVIRONMENT_TYPE" != "local" ] ;then  \
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
-        && unzip awscliv2.zip \
-        && ./aws/install\
-    ;fi
-#Install node v14
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
-    && apt-get update && apt-get install -y nodejs
-# install yarn
-RUN npm install --global yarn
+ENV GENERATE_SOURCEMAP false
 
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-RUN apachectl start
+ARG NODE_OPTIONS=--openssl-legacy-provider --max-old-space-size=100000
+RUN yarn install --immutable
 
-#Create user ssm-user
-RUN useradd -ms /bin/bash ssm-user
-RUN mkdir -p /var/www/html \
-    && chown ssm-user:www-data /var/www/html
+COPY webpack.config.js /app
+COPY assets/ /app/assets/
+COPY public/ /app/public/
+RUN yarn build
 
-#install composer
+FROM php:8.1-fpm as php-builder
+
+WORKDIR /app
+RUN apt-get update && apt-get install -y libpng-dev zlib1g-dev git unzip
+RUN docker-php-ext-configure gd && docker-php-ext-install -j$(nproc) gd
+COPY composer.* /app/
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+RUN composer install --no-dev --no-interaction --no-progress --optimize-autoloader
 
-#Install symfony
-RUN wget https://get.symfony.com/cli/installer -O - | bash && \
-    mv /root/.symfony/bin/symfony /usr/local/bin/symfony
+FROM php:8.1-fpm as final
 
-#Copy over files
-COPY --chown=ssm-user:www-data . /var/www/html/
+RUN docker-php-ext-install pdo_mysql
+COPY --from=node-builder /app/node_modules/ ./node_modules/
+COPY --from=node-builder /app/public/ ./public/
+COPY --from=php-builder /app/vendor/ ./vendor/
 
-WORKDIR /var/www/html
-#run setup script
-RUN chmod +x deploy/udoit-ng.sh
-RUN deploy/udoit-ng.sh
+RUN chown -R www-data:www-data /tmp
 
-CMD php-fpm
+EXPOSE 8080

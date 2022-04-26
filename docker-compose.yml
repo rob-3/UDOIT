@@ -1,8 +1,12 @@
-version: '3.3'
+version: '3.4'
+
+volumes:
+  dbdata:
 
 services:
   db:
-    image: mysql:latest
+    container_name: "udoit-db-1"
+    image: mariadb:latest
     volumes:
       - dbdata:/var/lib/mysql
     environment:
@@ -12,25 +16,35 @@ services:
       MYSQL_PASSWORD: udoit
     ports:
       - "3306:3306"
-  # Uncomment this block and comment the next db block
-  # to use Postgres instead of MySQL
-  # db:
-  #   image: postgres:alpine
-  #   restart: always
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     POSTGRES_USER: udoit
-  #     POSTGRES_PASSWORD: udoit
-  #     POSTGRES_DB: udoit3
   php:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/var/www/html
+    container_name: "udoit-php-1"
+    environment:
+      DATABASE_URL: mysql://udoit:udoit@db:3306/udoit3
     ports:
-      - "8000:8000"
-volumes:
-  web:
-  dbdata:
+      - "9000:9000"
+    depends_on:
+      - db
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    links:
+      - db
+    working_dir: /var/www/html
+    volumes:
+      - ./src:/var/www/html/src
+      - ./config:/var/www/html/config
+      - ./.env:/var/www/html/.env
+      - ./.env.local:/var/www/html/.env.local
+      - ./bin:/var/www/html/bin
+
+  nginx:
+    container_name: "udoit-nginx-1"
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+    links:
+      - php
+    depends_on:
+      - php
