@@ -42,7 +42,8 @@ class SessionAuthenticator extends AbstractAuthenticator
 
     public function supports(Request $request): ?bool
     {
-        return $this->sessionService->hasSession();
+        return true;
+        //return $this->sessionService->hasSession();
     }
 
 
