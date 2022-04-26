@@ -12,6 +12,7 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Security;
 
 class AuthController extends AbstractController
 {
@@ -23,10 +24,13 @@ class AuthController extends AbstractController
     private $lmsApi;
 
     private ManagerRegistry $doctrine;
+    
+    private Security $security;
 
-    public function __construct(ManagerRegistry $doctrine)
+    public function __construct(ManagerRegistry $doctrine, Security $security)
     {
         $this->doctrine = $doctrine;
+        $this->security = $security;
     }
 
     #[Route('/authorize', name: 'authorize')]
@@ -118,9 +122,9 @@ class AuthController extends AbstractController
      */
     protected function requestApiKeyFromLms(SessionService $sessionService)
     {
-        //dd($this->getUser());
+        //$user = $this->getUser();
         /** @var \App\Entity\User */
-        $user = $this->getUser();
+        $user = $this->security->getUser();
         $institution = $user->getInstitution();
         $code = $this->request->query->get('code');
         $clientSecret = $institution->getApiClientSecret();
